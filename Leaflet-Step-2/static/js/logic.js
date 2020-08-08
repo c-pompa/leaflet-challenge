@@ -1,37 +1,22 @@
-// 1. **Get your data set**
-
-// ![3-Data](Images/3-Data.png)
-
-// The USGS provides earthquake data in a number of different formats, updated every 5 minutes. Visit the [USGS GeoJSON Feed](http://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php) page and pick a data set to visualize. When you click on a data set, for example 'All Earthquakes from the Past 7 Days', you will be given a JSON representation of that data. You will be using the URL of this JSON to pull in the data for our visualization.
-
-// ![4-JSON](Images/4-JSON.png)
-// sd
-// 2. **Import & Visualize the Data**
-
-// Create a map using Leaflet that plots all of the earthquakes from your data set based on their longitude and latitude.
-
-// * Your data markers should reflect the magnitude of the earthquake in their size and color. Earthquakes with higher magnitudes should appear larger and darker in color.
-
-// * Include popups that provide additional information about the earthquake when a marker is clicked.
-
-// * Create a legend that will provide context for your map data.
-
-// * Your visualization should look something like the map above.
-
-
-// Create the tile layer that will be the background of our map
-
-// Initialize all of the LayerGroups we'll be using
-
-// An array which will be used to store created cityMarkers
-
+// Add Techtonic Plate Later as an option
+var techtonicLayer = L.layerGroup();
+d3.json("https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json", function(techtonicData) {
+    L.geoJSON(techtonicData, {
+        color: 'orange',
+        weight: 2
+    }).addTo(techtonicLayer);
+});
 
 // Perform an API call to the Citi Bike Station Information endpoint
 var data = d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson", function(data) {
+    // When the first API call is complete, perform another call to the Citi Bike Station Status endpoint
 
 
-    // console.log(data);
+
+    // console.log(techtonicData.features[1].geometry.coordinates);
     var features = data.features;
+    // var techtonic = techtonicData.features;
+    var techtonicArray = [];
     var earthquakeMarkers = [];
     var heatArray = [];
 
@@ -67,7 +52,9 @@ var data = d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.
         earthquakeMarkers.push(
             L.marker([features[i].geometry.coordinates[1], features[i].geometry.coordinates[0]], { icon: earthquakeIcon }).bindPopup(customPopup, customOptions)
         );
-
+        if (location) {
+            techtonicArray.push([]);
+        }
         if (location) {
             heatArray.push([features[i].geometry.coordinates[1], features[i].geometry.coordinates[0]]);
         }
@@ -82,9 +69,12 @@ var data = d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.
 
 
     var earthquakeLayer = L.layerGroup(earthquakeMarkers);
+
     var heat = L.heatLayer(heatArray, {
-        radius: 60,
-        blur: 40
+        minOpacity: .20,
+        radius: 55,
+        blur: 15,
+        max: 1.0
     });
 
     // Define variables for our tile layers
@@ -111,6 +101,7 @@ var data = d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.
     // Overlays that may be toggled on or off
     var overlayMaps = {
         'Earthquakes': earthquakeLayer,
+        'Techtonic Plates': techtonicLayer,
         'Heat Map': heat
     };
 
@@ -143,5 +134,6 @@ var data = d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.
 
     // Adding legend to the map
     legend.addTo(myMap);
+
 
 });
